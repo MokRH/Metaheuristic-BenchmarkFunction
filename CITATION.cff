@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use this code, please cite the article below."
+title: "Metaheuristic-Benchmark: MSFA, CMSFA and WOA on the standard test functions F1-F23"
+type: software
+authors:
+  - family-names: Mok
+    given-names: Ren Hao
+preferred-citation:
+  type: article
+  title: "Fast and optimal tuning of fractional order PID controller for AVR system based on memorizable-smoothed functional algorithm"
+  authors:
+    - family-names: Mok
+      given-names: Ren Hao
+    - family-names: Ahmad
+      given-names: Mohd Ashraf
+  journal: "Engineering Science and Technology, an International Journal"
+  volume: 35
+  start: 101264
+  year: 2022
+  doi: "10.1016/j.jestch.2022.101264"
