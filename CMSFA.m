@@ -17,14 +17,14 @@
 %                                                                         %
 %_________________________________________________________________________%
 
-function [Leader_score,Leader_pos,Convergence_curve]=CMSFA(SearchAgents_no,Max_iter,lb,ub,dim,fobj)
+function [Leader_score,Leader_pos,Convergence_curve]=CMSFA(~,Max_iter,lb,ub,dim,fobj)
 
 % initialize position vector and score for the leader
 Leader_pos=zeros(1,dim);
 Leader_score=inf; %change this to -inf for maximization problems
 
 %Initialize the positions of search agents
-Positions(1,1:dim)=initialization(SearchAgents_no,dim,ub,lb);
+Positions(1,1:dim)=initialization(1,dim,ub,lb);
 % Positions(1,1:dim)=[-1.14 -1.58 2.07 -1.41 -1.26 3.44 -2.29 -2.22 -1.87 -1.02]
 
 k=1;% Loop counter
