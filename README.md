@@ -1,4 +1,4 @@
-# Metaheuristic-Benchmark
+# Metaheuristic-Benchmark Function
 
 **MSFA, CMSFA and WOA on the 23 standard benchmark functions (F1–F23)**
 
