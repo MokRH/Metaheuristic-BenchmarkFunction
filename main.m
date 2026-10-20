@@ -1,124 +1,84 @@
 %_________________________________________________________________________%
-%  main.m - benchmark driver                                              %
+%  Whale Optimization Algorithm (WOA) source codes demo 1.0               %
 %                                                                         %
-%  Runs MSFA, CMSFA and WOA on the standard test functions F1-F23 and     %
-%  stores the results in ./results.                                       %
+%  Developed in MATLAB R2011b(7.13)                                       %
 %                                                                         %
-%  Based on the demo main.m of the WOA package by Seyedali Mirjalili      %
-%  (S. Mirjalili, A. Lewis, Advances in Engineering Software, 2016,       %
-%  DOI: 10.1016/j.advengsoft.2016.01.008).                                %
+%  Author and programmer: Seyedali Mirjalili                              %
+%                                                                         %
+%         e-Mail: ali.mirjalili@gmail.com                                 %
+%                 seyedali.mirjalili@griffithuni.edu.au                   %
+%                                                                         %
+%       Homepage: http://www.alimirjalili.com                             %
+%                                                                         %
+%   Main paper: S. Mirjalili, A. Lewis                                    %
+%               The Whale Optimization Algorithm,                         %
+%               Advances in Engineering Software , in press,              %
+%               DOI: http://dx.doi.org/10.1016/j.advengsoft.2016.01.008   %
+%                                                                         %
 %_________________________________________________________________________%
 
-clear; close all; clc
+% You can simply define your cost in a seperate file and load its handle to fobj 
+% The initial parameters that you need are:
+%__________________________________________
+% fobj = @YourCostFunction
+% dim = number of your variables
+% Max_iteration = maximum number of generations
+% SearchAgents_no = number of search agents
+% lb=[lb1,lb2,...,lbn] where lbn is the lower bound of variable n
+% ub=[ub1,ub2,...,ubn] where ubn is the upper bound of variable n
+% If all the variables have equal lower bound you can just
+% define lb and ub as two single number numbers
 
-%% ------------------------------ Settings ------------------------------
-Methods         = {'MSFA','CMSFA','WOA'};  % any subset of {'MSFA','CMSFA','WOA'}
-Functions       = {'F1','F6'};             % any subset of F1 ... F23
-% Functions     = arrayfun(@(i) sprintf('F%d',i), 1:23, 'UniformOutput', false); % all 23
-Runs            = 1;                       % independent runs per (function, method)
-SearchAgents_no = 1;                       % population size (MSFA/CMSFA use a single point)
-Max_iteration   = 201;                     % iterations per run
-doPlot          = true;                    % parameter space + convergence figure per function
-saveResults     = true;                    % write results/<F>_<METHOD>.mat, summary.csv, figures
-verbose         = false;                   % true = show the per-iteration output of the algorithms
+% To run WOA: [Best_score,Best_pos,WOA_cg_curve]=WOA(SearchAgents_no,Max_iteration,lb,ub,dim,fobj)
+% To run MSFA: [Best_score,Best_pos,MSFA_cg_curve]=MSFA(SearchAgents_no,Max_iteration,lb,ub,dim,fobj)
+% To run CMSFA: [Best_score,Best_pos,CMSFA_cg_curve]=CMSFA(SearchAgents_no,Max_iteration,lb,ub,dim,fobj)
+%__________________________________________
 
-%% ------------------------------ Paths ---------------------------------
-root = fileparts(mfilename('fullpath'));
-addpath(fullfile(root,'algorithms'), fullfile(root,'benchmark'));
-resultsDir = fullfile(root,'results');
-if saveResults && ~exist(resultsDir,'dir')
-    mkdir(resultsDir);
+close all
+clear all 
+clc
+rng default
+
+
+SearchAgents_no=3; % Number of search agents
+
+Function_name='F1'; % Name of the test function that can be from F1 to F23 (Table 1,2,3 in the paper)
+%1 3 5 6 11 
+
+Max_iteration=201; % Maximum numbef of iterations
+
+% Load details of the selected benchmark function
+[lb,ub,dim,fobj]=Get_Functions_details(Function_name);
+
+for iter=1:1
+% [Best_score(iter),Best_pos,WOA_cg_curve]=WOA(SearchAgents_no,Max_iteration,lb,ub,dim,fobj);
+[Best_score(iter),Best_pos,WOA_cg_curve]=CMSFA(SearchAgents_no,Max_iteration,lb,ub,dim,fobj);
 end
+avg = mean(Best_score);
+std_ = std(Best_score);
+best = Best_score(find(Best_score==min(Best_score)));
+save (Function_name);
 
-%% ------------------------------ Main loop -----------------------------
-rows = {};
-for f = 1:numel(Functions)
-    Function_name = Functions{f};
-    [lb,ub,dim,fobj] = Get_Functions_details(Function_name);
-    curves = cell(1,numel(Methods));       % convergence curve of the best run of each method
+figure('Position',[269   240   660   290])
+%Draw search space
+subplot(1,2,1);
+func_plot(Function_name);
+title('Parameter space')
+xlabel('x_1');
+ylabel('x_2');
+zlabel([Function_name,'( x_1 , x_2 )'])
 
-    for m = 1:numel(Methods)
-        Method = Methods{m};
-        alg    = str2func(Method);
+%Draw objective space
+subplot(1,2,2);
+semilogy(WOA_cg_curve,'Color','r')
+title('Objective space')
+xlabel('Iteration');
+ylabel('Best score obtained so far');
 
-        Best_score = zeros(Runs,1);
-        Best_pos   = zeros(Runs,dim);
-        cg_curves  = cell(Runs,1);
+axis tight
+grid on
+box on
+legend('WOA')
 
-        rng default                        % run 1 matches a single run of the original main.m
-        for r = 1:Runs
-            if verbose
-                [score,pos,cg] = alg(SearchAgents_no,Max_iteration,lb,ub,dim,fobj);
-            else
-                evalc('[score,pos,cg] = alg(SearchAgents_no,Max_iteration,lb,ub,dim,fobj);');
-            end
-            if ishghandle(11)              % MSFA/CMSFA draw a debug plot in figure 11
-                close(11);
-            end
-            Best_score(r) = score;
-            Best_pos(r,:) = pos;
-            cg_curves{r}  = cg;
-        end
-
-        best  = min(Best_score);
-        worst = max(Best_score);
-        avg   = mean(Best_score);
-        sd    = std(Best_score);
-        [~,iBest] = min(Best_score);
-        curves{m} = cg_curves{iBest};
-
-        rows(end+1,:) = {Function_name, Method, dim, Runs, best, avg, worst, sd}; %#ok<SAGROW>
-        fprintf('%-4s %-6s  best = %.6g   mean = %.6g   std = %.3g\n', ...
-                Function_name, Method, best, avg, sd);
-
-        if saveResults
-            save(fullfile(resultsDir,[Function_name '_' Method '.mat']), ...
-                 'Function_name','Method','Runs','Max_iteration','SearchAgents_no', ...
-                 'dim','lb','ub','Best_score','Best_pos','cg_curves', ...
-                 'best','avg','worst','sd');
-        end
-    end
-
-    %% Figure: search space and convergence curves of all methods
-    if doPlot
-        % 'IntegerHandle','off' keeps these figures away from figure(11) used by MSFA/CMSFA
-        fig = figure('IntegerHandle','off','NumberTitle','off','Name',Function_name, ...
-                     'Position',[269 240 660 290]);
-
-        subplot(1,2,1);
-        func_plot(Function_name);
-        title('Parameter space')
-        xlabel('x_1');
-        ylabel('x_2');
-        zlabel([Function_name,'( x_1 , x_2 )'])
-
-        subplot(1,2,2);
-        hold on
-        for m = 1:numel(Methods)
-            plot(curves{m},'LineWidth',1.5);
-        end
-        hold off
-        if all(cellfun(@(c) all(c>0), curves))
-            set(gca,'YScale','log');       % log axis only when every curve is positive
-        end
-        title('Objective space')
-        xlabel('Iteration');
-        ylabel('Best score obtained so far');
-        axis tight
-        grid on
-        box on
-        legend(Methods)
-
-        if saveResults
-            saveas(fig, fullfile(resultsDir,[Function_name '.png']));
-        end
-    end
-end
-
-%% ------------------------------ Summary -------------------------------
-summary = cell2table(rows, 'VariableNames', ...
-    {'Function','Method','Dim','Runs','Best','Mean','Worst','Std'});
-disp(summary)
-if saveResults
-    writetable(summary, fullfile(resultsDir,'summary.csv'));
-end
+display(['The best solution obtained by WOA is : ', num2str(Best_pos)]);
+display(['The best optimal value of the objective funciton found by WOA is : ', num2str(Best_score)]);
